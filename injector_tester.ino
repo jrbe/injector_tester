@@ -3,10 +3,10 @@
 //NEED A SAFETY STOP INPUT WITTEN IN - NOT DONE YET
 //VOLTAGE DISPLAY INPUT?
 
-// injmode is 1 for 360 degreesand 2 for 720 degree mode
+// injmode is 1 for 360 degrees and 2 for 720 degree mode
 //EQUATION 1000000(#_of_injectors/injmode)/60=revolution_time
-//revolution_time-off time=available injector on time
-// available injector on time/#_of_injectors=injector sequence gap time
+//revolution_time - off time = available injector on time
+// available injector on time / #_of_injectors = injector sequence gap time
 
 unsigned int injqty = 8;
 //WILL EVENTUALLY BE MENU ADJUSTABLE TO SET # OF INJECTORS
