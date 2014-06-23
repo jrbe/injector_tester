@@ -4,18 +4,28 @@
 //NEED A SAFETY STOP INPUT WITTEN IN - NOT DONE YET
 //VOLTAGE DISPLAY INPUT?
 
-// injmode is 1 for 360 degrees and 2 for 720 degree mode
-//EQUATION 1000000(#_of_injectors/injmode)/60=revolution_time
-//revolution_time - off time = available injector on time
-// available injector on time / #_of_injectors = injector sequence gap time
+// inj_mode is 1 for 360 degrees and 2 for 720 degree mode
+//EQUATION 60000000/RPM)*inj_mode =revolution_time
+//revolution_time - min_inj_off_time = avail_on_time
+// rev_time / injqty = inj_seq_gap - to time sequencing
 
-unsigned int injqty = 8;
-//WILL EVENTUALLY BE MENU ADJUSTABLE TO SET # OF INJECTORS
+unsigned int injqty = 8;   //WILL EVENTUALLY BE MENU ADJUSTABLE TO SET # OF INJECTORS, 1-8
 
-unsigned int RPM = 7000; //NOT PROGRAMMED YET - WILL BE MENU DRIEN AND WILL CALCULATE INJECTOR OFF TIME AND AVAILABLE ON TIME
-unsigned int offtime = 1000; //TO BE ALCULATED AND MENU DRIVEN
+unsigned int inj_mode = 2;   // 1 for 360 mode or 2 for 720
+unsigned int RPM = 1000;   //NOT PROGRAMMED YET - WILL BE MENU DRIEN AND WILL CALCULATE INJECTOR OFF TIME AND AVAILABLE ON TIME
+unsigned int req_on_time = 1000UL; //requested on time
 
-const byte FUEL_PUMP = 4;
+unsigned int min_inj_off_time = 1000UL; //TO BE ALCULATED AND MENU DRIVEN - in microseconds
+
+unsigned int on_time = 1000UL;
+
+unsigned long rev_time = (long) ((60000000/RPM)*inj_mode); //time in microsec per revolution * injector mode - 360' or 720'
+unsigned long avail_on_time = (long) rev_time - min_inj_off_time; 
+unsigned long inj_seq_gap = (long) rev_time/injqty;  //working?
+unsigned long off_time = (long) avail_on_time - on_time;
+
+
+const byte FUEL_PUMP = 4000; //millis pump on time - resets when injectors are pulsed and holds up injectors to prime.
 //TO BE ON FOR 4 SECONDS BEFORE, DURING, AND 4 SECONDS AFTER RUN CYCLE - NOT PROGRAMMED YET
 
 const byte INJ1_PIN = 5;
@@ -26,55 +36,58 @@ const byte INJ5_PIN = 9;
 const byte INJ6_PIN = 10;
 const byte INJ7_PIN = 11;
 const byte INJ8_PIN = 12;
-//SKIPPED PIN 13 BECAUSE OF ITS BOOT/WRITE BEHAVIORS 
+//SKIPPED PIN 13 BECAUSE OF ITS BOOT/WRITE BEHAVIORS
 
 //1 MILLSECOND = 1000 MICROSECONDS - WILL EVENTUALLY BE MENU DRVEN - IDIVIDUAL OR BATCHTIME?
-const unsigned long INJ1_ON = 16000UL;     //microseconds on
-const unsigned long INJ2_ON = 16000UL;
-const unsigned long INJ3_ON = 16000UL;     //microseconds on
-const unsigned long INJ4_ON = 16000UL;
-const unsigned long INJ5_ON = 16000UL;     //microseconds on
-const unsigned long INJ6_ON = 16000UL;
-const unsigned long INJ7_ON = 16000UL;     //microseconds on
-const unsigned long INJ8_ON = 16000UL;
+unsigned long INJ1_ON = on_time; //microseconds on
+unsigned long INJ2_ON = on_time;
+unsigned long INJ3_ON = on_time; //microseconds on
+unsigned long INJ4_ON = on_time;
+unsigned long INJ5_ON = on_time; //microseconds on
+unsigned long INJ6_ON = on_time;
+unsigned long INJ7_ON = on_time; //microseconds on
+unsigned long INJ8_ON = on_time;
 
-//MINIMUM OFF TIME?  OFF TIME AS MICROSECONSDS OR DUTY CYCE?
-const unsigned long INJ1_OFF = 2000000UL;  //microseconds off - WILL BE MENU DRIVEN AND CALC'D FROM RPM
-const unsigned long INJ2_OFF = 2000000UL;
-const unsigned long INJ3_OFF = 2000000UL;
-const unsigned long INJ4_OFF = 2000000UL;
-const unsigned long INJ5_OFF = 2000000UL;
-const unsigned long INJ6_OFF = 2000000UL;
-const unsigned long INJ7_OFF = 2000000UL;
-const unsigned long INJ8_OFF = 2000000UL;
+//MINIMUM OFF TIME? OFF TIME AS MICROSECONSDS OR DUTY CYCE?
+unsigned long INJ1_OFF = off_time; //microseconds off - WILL BE MENU DRIVEN AND CALC'D FROM RPM
+unsigned long INJ2_OFF = off_time;
+unsigned long INJ3_OFF = off_time;
+unsigned long INJ4_OFF = off_time;
+unsigned long INJ5_OFF = off_time;
+unsigned long INJ6_OFF = off_time;
+unsigned long INJ7_OFF = off_time;
+unsigned long INJ8_OFF = off_time;
 
-unsigned long mcs1;        //time from micros()
-unsigned long mcs1Last;    //last time the inj changed state
-unsigned long mcs2;        //time from micros()
-unsigned long mcs2Last;    //last time the inj changed state
-unsigned long mcs3;        //time from micros()
-unsigned long mcs3Last;    //last time the inj changed state
-unsigned long mcs4;        //time from micros()
-unsigned long mcs4Last;    //last time the inj changed state
-unsigned long mcs5;        //time from micros()
-unsigned long mcs5Last;    //last time the inj changed state
-unsigned long mcs6;        //time from micros()
-unsigned long mcs6Last;    //last time the inj changed state
-unsigned long mcs7;        //time from micros()
-unsigned long mcs7Last;    //last time the inj changed state
-unsigned long mcs8;        //time from micros()
-unsigned long mcs8Last;    //last time the inj changed state
-boolean inj1State;        //current inj1 state
-boolean inj2State;        //current inj2 state
-boolean inj3State;        //current inj3 state
-boolean inj4State;        //current inj4 state
-boolean inj5State;        //current inj5 state
-boolean inj6State;        //current inj6 state
-boolean inj7State;        //current inj7 state
-boolean inj8State;        //current inj8 state
+unsigned long mcs1; //time from micros()
+unsigned long mcs1Last; //last time the inj changed state
+unsigned long mcs2; //time from micros()
+unsigned long mcs2Last; //last time the inj changed state
+unsigned long mcs3; //time from micros()
+unsigned long mcs3Last; //last time the inj changed state
+unsigned long mcs4; //time from micros()
+unsigned long mcs4Last; //last time the inj changed state
+unsigned long mcs5; //time from micros()
+unsigned long mcs5Last; //last time the inj changed state
+unsigned long mcs6; //time from micros()
+unsigned long mcs6Last; //last time the inj changed state
+unsigned long mcs7; //time from micros()
+unsigned long mcs7Last; //last time the inj changed state
+unsigned long mcs8; //time from micros()
+unsigned long mcs8Last; //last time the inj changed state
+boolean inj1State; //current inj1 state
+boolean inj2State; //current inj2 state
+boolean inj3State; //current inj3 state
+boolean inj4State; //current inj4 state
+boolean inj5State; //current inj5 state
+boolean inj6State; //current inj6 state
+boolean inj7State; //current inj7 state
+boolean inj8State; //current inj8 state
 
 void setup(void) {
 
+  //Serial.begin(9600);
+
+  
     pinMode (INJ1_PIN, OUTPUT);
     pinMode (INJ2_PIN, OUTPUT);
     pinMode (INJ3_PIN, OUTPUT);
@@ -86,8 +99,19 @@ void setup(void) {
     pinMode (FUEL_PUMP, OUTPUT); //NOT PROGRAMMED YET
 }
 
-void loop(void)
-{
+void loop(void){
+
+  //Serial.print ("on time");
+  //Serial.print ("");
+  //Serial.print (on_time);
+
+
+  //Serial.print ("off time");
+  //Serial.print ("");
+  //Serial.print (off_time);
+
+//delay (1000);
+  
     mcs1 = micros();
     mcs2 = micros();
     mcs3 = micros();
@@ -103,7 +127,7 @@ void loop(void)
     pulseINJ5();
     pulseINJ6();
     pulseINJ7();
-    pulseINJ8();    
+    pulseINJ8();
     
 //NEEDS SEQUENTIAL TIME CALCULATED FROM # OF INJECTORS. INITIAL DELAY OR DELAY EACH CYCLE?
 //NEEDS COUNTERS ADDED TO EACH/LAST? INJECTOR TO KEEP TRACK OF RUN
